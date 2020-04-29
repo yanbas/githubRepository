@@ -2,6 +2,7 @@ package App
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -57,6 +58,20 @@ func (a *App) getData(w http.ResponseWriter, r *http.Request) {
 	err := a.CallHTTPServiceGithub(param[7:])
 	if err != nil {
 		log.Println(err.Error())
+
+		// Check if error equal Not Found
+		if err.Error() == "Not Found" {
+			response.Success = false
+			response.Message = "User is not found"
+			data, err := json.Marshal(response)
+			if err != nil {
+				log.Println(err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Write(data)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -102,6 +117,12 @@ func (a *App) CallHTTPServiceGithub(user string) error {
 
 	log.Println(fmt.Sprintf("Response Status : %s", resp.Status))
 	log.Println(fmt.Sprintf("Response Body : %s", resp_body))
+
+	// check if response message is not found
+	if resp.Status == "404 Not Found" {
+		errorNotFound := errors.New("Not Found")
+		return errorNotFound
+	}
 
 	err = json.Unmarshal(resp_body, &a.ResponseData)
 	if err != nil {
