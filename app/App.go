@@ -10,6 +10,11 @@ import (
 )
 
 type App struct {
+	ResponseData []ResponseGithub
+}
+
+func (a *App) Initialize() {
+	log.Println(http.ListenAndServe(":8085", http.HandlerFunc(a.getData)))
 }
 
 func (a *App) getData(w http.ResponseWriter, r *http.Request) {
@@ -48,13 +53,30 @@ func (a *App) getData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(param[7:])
+	// Call REST Client for github API
+	err := a.CallHTTPServiceGithub(param[7:])
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	a.CallHTTPServiceGithub(param[7:])
+	response.Message = "Done"
+	response.Success = true
+	response.List = a.ResponseData
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(data)
 
 }
 
-func (a *App) CallHTTPServiceGithub(user string) {
+func (a *App) CallHTTPServiceGithub(user string) error {
 
 	client := &http.Client{}
 
@@ -66,13 +88,19 @@ func (a *App) CallHTTPServiceGithub(user string) {
 
 	if err != nil {
 		log.Println("Errored when sending request to the server")
-		return
+		return err
 	}
 
 	defer resp.Body.Close()
 	resp_body, _ := ioutil.ReadAll(resp.Body)
 
-	fmt.Println(resp.Status)
-	fmt.Println(string(resp_body))
+	log.Println(fmt.Sprintf("Response Status : %s", resp.Status))
+	log.Println(fmt.Sprintf("Response Body : %s", resp_body))
 
+	err = json.Unmarshal(resp_body, &a.ResponseData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

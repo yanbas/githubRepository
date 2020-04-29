@@ -3,9 +3,9 @@ package App
 import "time"
 
 type Response struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message"`
-	List    interface{} `json:"lists"`
+	Success bool             `json:"success"`
+	Message string           `json:"message"`
+	List    []ResponseGithub `json:"lists"`
 }
 
 type ResponseGithub struct {
