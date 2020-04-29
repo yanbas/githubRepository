@@ -61,9 +61,15 @@ func (a *App) getData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Filter Result
+	displayData := DisplayData{}
+	for _, v := range a.ResponseData {
+		displayData.Repository = append(displayData.Repository, v.Name)
+	}
+
 	response.Message = "Done"
 	response.Success = true
-	response.List = a.ResponseData
+	response.List = displayData
 
 	data, err := json.Marshal(response)
 	if err != nil {

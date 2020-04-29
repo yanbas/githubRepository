@@ -3,9 +3,13 @@ package App
 import "time"
 
 type Response struct {
-	Success bool             `json:"success"`
-	Message string           `json:"message"`
-	List    []ResponseGithub `json:"lists"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	List    DisplayData `json:"lists"`
+}
+
+type DisplayData struct {
+	Repository []string `json:"repository"`
 }
 
 type ResponseGithub struct {
